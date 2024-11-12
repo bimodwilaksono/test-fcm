@@ -5,9 +5,11 @@
  * @format
  */
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
+  Alert,
+  PermissionsAndroid,
   SafeAreaView,
   ScrollView,
   StatusBar,
@@ -24,6 +26,7 @@ import {
   LearnMoreLinks,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
+import messaging from '@react-native-firebase/messaging'
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -62,6 +65,34 @@ function App(): React.JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
+  async function requestNotifications() {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('granted notif');
+      } else {
+        console.log('not granted notif');
+      }
+    } catch (error) {
+      console.log('error request notif', error);
+    }
+  }
+
+  useEffect(() => {
+    requestNotifications();
+    messaging().subscribeToTopic('tes').then(() => console.log('subscribed topic'))
+
+    return () => {
+      messaging().unsubscribeFromTopic('tes').then(() => console.log('unsubscribe'))
+    }
+  }, []);
+
+async function getToken() {
+  const fcmToken = await messaging().getToken();
+  console.log(fcmToken)
+}
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
